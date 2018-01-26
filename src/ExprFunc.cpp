@@ -720,3 +720,111 @@ bool ExprFunc::testRepression( const Site& a, const Site& b ) const
     double dist = abs( b.start - a.start  );
     return repressionMat( a.factorIdx, b.factorIdx ) && ( dist <= repressionDistThr );
 }
+
+double TFC_Direct_ExprFunc::compPartFuncOn() const
+{
+    int n = n_sites;
+
+    // initialization
+    vector< double > Z( n + 1 );
+    Z[0] = 1.0;
+    vector< double > Zt( n + 1 );
+    Zt[0] = 1.0;
+
+    // recurrence
+    for ( int i = 1; i <= n; i++ )
+    {
+        double sum = Zt[boundaries[i]];
+        for ( int j = boundaries[i] + 1; j < i; j++ )
+        {
+            if ( siteOverlap( sites[ i ], sites[ j ], motifs ) ) continue;
+            sum += compFactorInt( sites[ j ], sites[ i ] ) * Z[ j ];
+        }
+        //Z[i] = bindingWts[ i ] * txpEffects[ sites[i].factorIdx ] * sum;
+        if( actIndicators[ sites[ i ].factorIdx ] )
+        {
+            Z[ i ] = bindingWts[ i ] * txpEffects[ sites[ i ].factorIdx ] * sum;
+            //cout << "1: " << txpEffects[ sites[ i ].factorIdx ] << endl;
+        }
+        if( repIndicators[ sites[ i ].factorIdx ] )
+        {
+            Z[ i ] = bindingWts[ i ] * repEffects[ sites[ i ].factorIdx ] * sum;
+            //cout << "2: " << repEffects[ sites[ i ].factorIdx ] << endl;
+        }
+        //cout << "DEBUG 0: " << sum << "\t" << Zt[ i - 1] << endl;
+        Zt[i] = Z[i] + Zt[i - 1];
+        /*if( actIndicators[ sites[ i ].factorIdx ] )
+            cout << "DEBUG 1: " << Zt[i] << "\t" << bindingWts[i]*txpEffects[sites[i].factorIdx]*(Zt[ i - 1] + 1) << endl;
+        if( repIndicators[ sites[ i ].factorIdx ] )
+            cout << "DEBUG 2: " << Zt[i] << "\t" << bindingWts[i]*repEffects[sites[i].factorIdx]*(Zt[ i - 1] + 1) << endl;*/
+      }
+
+    return Zt[n];
+}
+
+double TFC_Direct_ExprFunc::compPartFuncOff() const
+{
+    #ifdef DEBUG
+      assert(modelOption != CHRMOD_UNLIMITED && modelOption != CHRMOD_LIMITED );
+    #endif
+
+    int n = n_sites;
+    // initialization
+    vector< double > Z( n + 1 );
+    Z[0] = 1.0;
+    vector< double > Zt( n + 1 );
+    Zt[0] = 1.0;
+
+    // recurrence
+    for ( int i = 1; i <= n; i++ )
+    {
+        double sum = Zt[boundaries[i]];
+        if( sum != sum )
+        {
+            cout << "DEBUG: sum nan" << "\t" << Zt[ boundaries[i] ] <<  endl;
+            exit(1);
+        }
+        //cout << "DEBUG: sum = " << n << endl;
+        for ( int j = boundaries[i] + 1; j < i; j++ )
+        {
+            if ( siteOverlap( sites[ i ], sites[ j ], motifs ) ) continue;
+            //cout << "compFactorInt: " << compFactorInt( sites[ j ], sites[ i ] ) << "\t";
+            //cout << "Z[j]: " << Z[ j ] << endl;
+            double old_sum = sum;
+            sum += compFactorInt( sites[ i ], sites[ j ] ) * Z[ j ];
+            if( sum != sum || isinf( sum ))
+            {
+                cout << "Old sum:\t" << old_sum << endl;
+                cout << "Factors:\t" << sites[ i ].factorIdx << "\t" << sites[ j ].factorIdx << endl;
+                cout << "compFactorInt:\t" << compFactorInt( sites[ j ], sites[ i ] ) << endl;
+                cout << "Z[j]:\t" << Z[ j ] << endl;
+                cout << i << "\t" << j << "\t" << factorIntMat( (sites[i]).factorIdx, (sites[j]).factorIdx ) << endl;
+                cout << "DEBUG: sum nan/inf\t"<< sum << endl;
+                exit(1);
+            }
+        }
+
+        Z[i] = bindingWts[ i ] * sum;
+        if( Z[i]!=Z[i] )
+        {
+            cout << "DEBUG: Z bindingWts[i]: " << sites[i].factorIdx << "\t" << bindingWts[ sites[i].factorIdx ] <<"\t" << sum << endl;
+            exit(1);
+        }
+        Zt[i] = Z[i] + Zt[i - 1];
+        //cout << "debug: Zt[i] = " << Zt[i] << endl;
+    }
+
+    // the partition function
+    //  double Z_bind = 1;
+    //  for ( int i = 0; i < sites.size(); i++ ) {
+    //    Z_bind += Z[ i ];
+    //  }
+    return Zt[n];
+}
+
+TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){
+
+  cerr << "instantiated TFC DIRECT.!" << endl;
+  assert(false);
+   
+}

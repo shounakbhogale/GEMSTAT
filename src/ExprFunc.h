@@ -1,5 +1,4 @@
-//SHOUNAK
-#ifndef EXPR_FUNC_H
+ #ifndef EXPR_FUNC_H
 #define EXPR_FUNC_H
 
 #include "ExprModel.h"
@@ -163,6 +162,16 @@ class ChrModLimited_ExprFunc : public ChrMod_ExprFunc {
   protected:
     // compute the partition function when the BTM is bound
     double compPartFuncOn() const;
+};
+
+class TFC_Direct_ExprFunc : public ExprFunc {
+  public:
+      // constructors
+      TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num);// : ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
+  protected:
+    // compute the partition function when the BTM is bound
+    double compPartFuncOn() const;
+    double compPartFuncOff() const;
 };
 
 
