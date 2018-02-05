@@ -824,7 +824,9 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
 
 TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){
 
-  cerr << "instantiated TFC DIRECT.!" << endl;
+  //double globalnu = ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"];
+  //cerr << "Global scaling constant = " << globalnu << endl;
+  cerr << "Global scaling constant = " << globalnu  << "Instantiated TFC DIRECT.!" << endl;
+  cerr << "HAHA" << endl;
   assert(false);
-   
 }
