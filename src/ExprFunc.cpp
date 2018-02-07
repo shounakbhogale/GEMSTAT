@@ -721,38 +721,63 @@ bool ExprFunc::testRepression( const Site& a, const Site& b ) const
     return repressionMat( a.factorIdx, b.factorIdx ) && ( dist <= repressionDistThr );
 }
 
+void TFC_Direct_ExprFunc::setupConcs(const vector< double >& factorConcs)
+{
+  int n = par.nFactors();
+  tfc_concs.resize(n);
+  for(int i = 0; i < n; i++)
+  {
+    tfc_concs[i] = factorConcs[i];
+  }
+}
+
 double TFC_Direct_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
+    int m = par.nFactors();
 
     // initialization
-    vector< double > Z( n + 1 );
+    vector< double > Z( n + 1 );            //Z_on(i,0)
     Z[0] = 1.0;
     vector< double > Zt( n + 1 );
     Zt[0] = 1.0;
+    vector< double > PPI(n + 1,1.0);
+
+    
 
     // recurrence
-    for ( int i = 1; i <= n; i++ )
-    {
+      for ( int i = 1; i <= n; i++ )
+      {
+        for(int x = 0; x < m; x++)
+        {
+          if( actIndicators[ sites[ i ].factorIdx ] )
+          {
+            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * txpEffects[x];
+          }
+          if( repIndicators[ sites[ i ].factorIdx ] )
+          {
+            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * repEffects[x];
+          } 
+      }
         double sum = Zt[boundaries[i]];
         for ( int j = boundaries[i] + 1; j < i; j++ )
         {
             if ( siteOverlap( sites[ i ], sites[ j ], motifs ) ) continue;
-            sum += compFactorInt( sites[ j ], sites[ i ] ) * Z[ j ];
+            sum += compFactorInt( sites[ j ], sites[ i ] ) * Z[ j ] * PPI[j];
         }
         //Z[i] = bindingWts[ i ] * txpEffects[ sites[i].factorIdx ] * sum;
         if( actIndicators[ sites[ i ].factorIdx ] )
         {
-            Z[ i ] = bindingWts[ i ] * txpEffects[ sites[ i ].factorIdx ] * sum;
+            Z[ i ] = bindingWts[ i ] * txpEffects[ sites[ i ].factorIdx ] * sum * globalnu;
             //cout << "1: " << txpEffects[ sites[ i ].factorIdx ] << endl;
         }
         if( repIndicators[ sites[ i ].factorIdx ] )
         {
-            Z[ i ] = bindingWts[ i ] * repEffects[ sites[ i ].factorIdx ] * sum;
+            Z[ i ] = bindingWts[ i ] * repEffects[ sites[ i ].factorIdx ] * sum * globalnu;
             //cout << "2: " << repEffects[ sites[ i ].factorIdx ] << endl;
         }
         //cout << "DEBUG 0: " << sum << "\t" << Zt[ i - 1] << endl;
-        Zt[i] = Z[i] + Zt[i - 1];
+        Zt[i] = Z[i]*PPI[i] + Zt[i - 1];
         /*if( actIndicators[ sites[ i ].factorIdx ] )
             cout << "DEBUG 1: " << Zt[i] << "\t" << bindingWts[i]*txpEffects[sites[i].factorIdx]*(Zt[ i - 1] + 1) << endl;
         if( repIndicators[ sites[ i ].factorIdx ] )
@@ -762,22 +787,29 @@ double TFC_Direct_ExprFunc::compPartFuncOn() const
     return Zt[n];
 }
 
+
+
 double TFC_Direct_ExprFunc::compPartFuncOff() const
 {
     #ifdef DEBUG
-      assert(modelOption != CHRMOD_UNLIMITED && modelOption != CHRMOD_LIMITED );
+      assert(modelOption != TFC_Direct && modelOption != TFC_Direct );
     #endif
 
     int n = n_sites;
+    int m = par.nFactors();
     // initialization
-    vector< double > Z( n + 1 );
+    vector< double > Z( n+1 );                                        //Z_off(i,0)
     Z[0] = 1.0;
-    vector< double > Zt( n + 1 );
+    vector< double > PPI(n + 1,1.0);
+    vector< double > Zt(n + 1);
     Zt[0] = 1.0;
 
-    // recurrence
     for ( int i = 1; i <= n; i++ )
     {
+        for(int x = 0; x < m; x++)
+        {
+          PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x); 
+        }
         double sum = Zt[boundaries[i]];
         if( sum != sum )
         {
@@ -791,7 +823,7 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
             //cout << "compFactorInt: " << compFactorInt( sites[ j ], sites[ i ] ) << "\t";
             //cout << "Z[j]: " << Z[ j ] << endl;
             double old_sum = sum;
-            sum += compFactorInt( sites[ i ], sites[ j ] ) * Z[ j ];
+            sum += compFactorInt( sites[ i ], sites[ j ] ) * Z[ j ] * PPI[j];
             if( sum != sum || isinf( sum ))
             {
                 cout << "Old sum:\t" << old_sum << endl;
@@ -804,13 +836,13 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
             }
         }
 
-        Z[i] = bindingWts[ i ] * sum;
+        Z[i] = bindingWts[ i ] * sum * globalnu;
         if( Z[i]!=Z[i] )
         {
             cout << "DEBUG: Z bindingWts[i]: " << sites[i].factorIdx << "\t" << bindingWts[ sites[i].factorIdx ] <<"\t" << sum << endl;
             exit(1);
         }
-        Zt[i] = Z[i] + Zt[i - 1];
+        Zt[i] = Z[i]*PPI[i] + Zt[i - 1];
         //cout << "debug: Zt[i] = " << Zt[i] << endl;
     }
 
@@ -823,10 +855,44 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
 }
 
 TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){
-
-  //double globalnu = ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"];
-  //cerr << "Global scaling constant = " << globalnu << endl;
-  cerr << "Global scaling constant = " << globalnu  << "Instantiated TFC DIRECT.!" << endl;
-  cerr << "HAHA" << endl;
+  globalnu = ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"];
+  cerr << "Global scaling constant = " << globalnu << "\t" << "Instantiated TFC DIRECT.!" << endl;
   assert(false);
 }
+
+double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
+{
+  // compute the Boltzman weights of binding for all sites
+    setupBindingWeights(factorConcs);
+    setupConcs(factorConcs);
+
+    // Thermodynamic models: Direct, Quenching, ChrMod_Unlimited and ChrMod_Limited
+    // compute the partition functions
+    double Z_off = compPartFuncOff();
+    //cout << "Z_off = " << Z_off << endl;
+    double Z_on = compPartFuncOn();
+    //cout << "Z_on = " << Z_on << endl;
+
+    // compute the expression (promoter occupancy)
+    double efficiency = Z_on / Z_off;
+    //cout << "efficiency = " << efficiency << endl;
+    //cout << "basalTxp = " << basalTxps[ seq_num ] << endl;
+
+    GEMSTAT_PROMOTER_DATA_T my_promoter = par.getPromoterData( this->seq_number );
+
+    double promoterOcc = efficiency * my_promoter.basal_trans / ( 1.0 + efficiency * my_promoter.basal_trans /** ( 1 + my_promoter.pi )*/ );
+    #ifdef DEBUG
+    if(promoterOcc < 0.0 || promoterOcc != promoterOcc){
+    cerr << "Ridiculous in Direct!" << endl;
+    cerr << "efficiency " << efficiency << endl;
+    cerr << "Z_on" << Z_on << endl;
+    cerr << "Z_off" << Z_off << endl;
+    cerr << "basal " << my_promoter.basal_trans << endl; //TODO: I think I just found the bug.
+    cerr << "=====" << endl;
+    }
+    #else
+    assert(promoterOcc >= 0.0 && promoterOcc == promoterOcc);
+    #endif
+    return promoterOcc;
+}
+

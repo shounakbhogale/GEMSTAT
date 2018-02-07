@@ -172,6 +172,12 @@ class TFC_Direct_ExprFunc : public ExprFunc {
     // compute the partition function when the BTM is bound
     double compPartFuncOn() const;
     double compPartFuncOff() const;
+
+    double predictExpr( const vector< double >& factorConcs );
+    void setupConcs(const vector< double >& factorConcs);
+
+    vector< double > tfc_concs;
+    double globalnu;
 };
 
 
