@@ -338,7 +338,7 @@ int main( int argc, char* argv[] )
         try{
           par_init = param_factory->load( parFile );
           read_par_init_file = true;
-        }catch (int& e){
+	  }catch (exception& e){
             cerr << "Cannot read parameters from " << parFile << endl;
             exit( 1 );
         }
@@ -356,7 +356,7 @@ int main( int argc, char* argv[] )
           cerr << "loading free fix" << endl;
           param_ff = param_factory->load( free_fix_indicator_filename );
           cerr << "loaded free fix" << endl;
-        }catch (int& e){
+	  }catch (exception& e){
           cerr << "Could not parse/read the free_fix file " << free_fix_indicator_filename << endl;
           exit(1);
         }
@@ -401,7 +401,7 @@ int main( int argc, char* argv[] )
 		upper_bound_par = param_factory->load( upper_bound_file );
 		upper_bound_par = param_factory->changeSpace(upper_bound_par, ENERGY_SPACE);
 		upper_bound_par_read = true;
-	}catch (int& e){
+	}catch (exception& e){
 		cerr << "Cannot read upper bounds from " << upper_bound_file << endl;
 		exit( 1 );
 	}
@@ -412,7 +412,7 @@ int main( int argc, char* argv[] )
 		lower_bound_par = param_factory->load( lower_bound_file );
 		lower_bound_par = param_factory->changeSpace(lower_bound_par, ENERGY_SPACE);
 		lower_bound_par_read = true;
-	}catch (int& e){
+	}catch (exception& e){
 		cerr << "Cannot read lower bounds from " << lower_bound_file << endl;
 		exit( 1 );
 	}
@@ -422,6 +422,7 @@ int main( int argc, char* argv[] )
     vector < double > all_pars_for_test;
     par_init.getRawPars(all_pars_for_test );
     ASSERT_MESSAGE(all_pars_for_test.size() == indicator_bool.size(), "For some reason, the number of entries in free_fix did not match the number of free parameters.\n"
+			"(This might happen if you added a new optimization parameter but did not have it in all of the '-p','-ff','-lower_bound',&'-upper_bound' argument files.)\n"
 		  "Remember that whatever model, there are 3 parameters for every transcription factor\n");
     all_pars_for_test.clear();//Won't be used again.
     //It is possible that the user wants to write out to the same par file, doing this after reading the par file means we won't have overridden it before reading
