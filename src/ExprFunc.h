@@ -178,6 +178,7 @@ class TFC_Direct_ExprFunc : public ExprFunc {
 
     vector< double > tfc_concs;
     double globalnu;
+    vector<vector<int> > check_interaction;
 };
 
 

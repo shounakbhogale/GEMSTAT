@@ -4,7 +4,7 @@
 #include "ExprPar.h"
 
 //#define DEBUG
-ExprFunc::ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num): expr_model(_model), par(_par), motifs( _model->motifs ), actIndicators( _model->actIndicators ), maxContact( _model->maxContact ), repIndicators( _model->repIndicators ), repressionMat( _model->repressionMat ), repressionDistThr( _model->repressionDistThr ), factorIntMat(_model->motifs.size(),_model->motifs.size())
+ExprFunc::ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num): expr_model(_model), par(_par), motifs( _model->motifs ), actIndicators( _model->actIndicators ), maxContact( _model->maxContact ), repIndicators( _model->repIndicators ), repressionMat( _model->repressionMat ), repressionDistThr( _model->repressionDistThr ), factorIntMat(_model->motifs.size(),_model->motifs.size(),1.0)
 {
     //par = _par;//NOTE: made this const, and that solved a memory leak.
 
@@ -752,11 +752,11 @@ double TFC_Direct_ExprFunc::compPartFuncOn() const
         {
           if( actIndicators[ sites[ i ].factorIdx ] )
           {
-            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * txpEffects[x];
+            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * txpEffects[x] * check_interaction[(sites[i]).factorIdx][x];
           }
           if( repIndicators[ sites[ i ].factorIdx ] )
           {
-            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * repEffects[x];
+            PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * repEffects[x] * check_interaction[(sites[i]).factorIdx][x];
           } 
       }
         double sum = Zt[boundaries[i]];
@@ -808,8 +808,13 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
     {
         for(int x = 0; x < m; x++)
         {
-          PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x); 
+          //cerr << "factorInt " << factorIntMat((sites[i]).factorIdx , x) << endl;
+          PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * check_interaction[(sites[i]).factorIdx][x]; 
+          //cerr << i << "\t" << (sites[i]).factorIdx << "\t" << factorIntMat((sites[i]).factorIdx , x) * check_interaction[(sites[i]).factorIdx][x]<< endl;
         }
+        //assert(false);
+        //cerr << i << endl;
+        //cerr << PPI[i] << endl;
         double sum = Zt[boundaries[i]];
         if( sum != sum )
         {
@@ -824,7 +829,7 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
             //cout << "Z[j]: " << Z[ j ] << endl;
             double old_sum = sum;
             sum += compFactorInt( sites[ i ], sites[ j ] ) * Z[ j ] * PPI[j];
-            if( sum != sum || isinf( sum ))
+            if( sum != sum || isinf( sum ))//DEBUG
             {
                 cout << "Old sum:\t" << old_sum << endl;
                 cout << "Factors:\t" << sites[ i ].factorIdx << "\t" << sites[ j ].factorIdx << endl;
@@ -855,9 +860,38 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
 }
 
 TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){
-  globalnu = ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"];
-  cerr << "Global scaling constant = " << globalnu << "\t" << "Instantiated TFC DIRECT.!" << endl;
-  assert(false);
+  #ifdef DEBUG
+  cerr << "running TFC_Direct_ExprFunc::setupSitesAndBoundaries(...)" << endl;
+  #endif
+  //globalnu = 1.0;
+
+//  cerr << "DEBUG" << endl;
+//  cerr << ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"] << endl;
+//  cerr << endl;
+  //exit(1);
+
+  globalnu = ((gsparams::DictList&)par.my_pars).at("collective").at("globalnu");
+
+  //cerr << "Global scaling constant = " << globalnu << "\t" << "Instantiated TFC DIRECT.!" << endl;
+  //assert(false);
+
+  int m = par.nFactors();
+  check_interaction.resize(m);
+  //cerr << endl;
+  for(int i = 0; i< m; i++)
+  {
+    check_interaction[i].resize(m);
+    for(int j = 0; j < m; j++)
+    { 
+      check_interaction[i][j] = expr_model->coop_setup->has_coop(i,j);
+      //cerr << check_interaction[i][j] << "\t";
+      //cerr << expr_model->coop_setup->has_coop(i,j) << "\t";
+    }
+    //cerr << endl;
+  }
+
+  //assert(false);
+  
 }
 
 double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
@@ -881,7 +915,7 @@ double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
     GEMSTAT_PROMOTER_DATA_T my_promoter = par.getPromoterData( this->seq_number );
 
     double promoterOcc = efficiency * my_promoter.basal_trans / ( 1.0 + efficiency * my_promoter.basal_trans /** ( 1 + my_promoter.pi )*/ );
-    #ifdef DEBUG
+    //#ifdef DEBUG
     if(promoterOcc < 0.0 || promoterOcc != promoterOcc){
     cerr << "Ridiculous in Direct!" << endl;
     cerr << "efficiency " << efficiency << endl;
@@ -890,9 +924,9 @@ double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
     cerr << "basal " << my_promoter.basal_trans << endl; //TODO: I think I just found the bug.
     cerr << "=====" << endl;
     }
-    #else
-    assert(promoterOcc >= 0.0 && promoterOcc == promoterOcc);
-    #endif
+    //#else
+    //assert(promoterOcc >= 0.0 && promoterOcc == promoterOcc);
+    //#endif
     return promoterOcc;
 }
 
