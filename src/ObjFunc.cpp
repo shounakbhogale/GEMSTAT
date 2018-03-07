@@ -33,7 +33,7 @@ double AvgCorrObjFunc::eval(const vector<vector<double> >& ground_truth, const v
 
     for(int i = 0;i<ground_truth.size();i++){
 
-      totalSim += corr(  prediction[i], ground_truth[i] );
+      totalSim += abs( corr(  prediction[i], ground_truth[i] ) );
   }
 
     return -totalSim/nSeqs;

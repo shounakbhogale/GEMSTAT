@@ -991,7 +991,7 @@ double corr( const vector< double >& x, const vector< double >& y )
         sum += ( X[s] - x_bar ) * ( Y[s] - y_bar );
     }
     double cov_xy = sum / n;
-    double corr_xy = cov_xy / sqrt( x_var * y_var );
+    double corr_xy = cov_xy / sqrt( x_var * y_var + 0.000001 );
 
     return corr_xy;
 }
