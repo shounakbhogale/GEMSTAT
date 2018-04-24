@@ -119,6 +119,7 @@ double ExprFunc::predictExpr(const Condition& in_condition){
   }
   assert(to_return >= 0.0); //Positive expression
   assert(!(to_return != to_return)); //not NaN
+  //cerr << to_return << "\t";
   return to_return;
 }
 
@@ -134,6 +135,7 @@ double ExprFunc::predictExpr( const vector< double >& factorConcs )
     //cout << "Z_off = " << Z_off << endl;
     double Z_on = compPartFuncOn();
     //cout << "Z_on = " << Z_on << endl;
+    //cout << Z_off << "\t" << Z_on << endl;
 
     // compute the expression (promoter occupancy)
     double efficiency = Z_on / Z_off;
@@ -411,6 +413,7 @@ double ExprFunc::compPartFuncOff() const
     // 	for ( int i = 0; i < sites.size(); i++ ) {
     // 		Z_bind += Z[ i ];
     // 	}
+    //cerr << "off" << "\t" << Zt[n] << "\t"; 
     return Zt[n];
 }
 
@@ -512,6 +515,7 @@ double Direct_ExprFunc::compPartFuncOn() const
     }
 
     return Zt[n];
+    //cerr << "on" << "\t" << Zt[n] << endl; 
 }
 
 
@@ -758,6 +762,7 @@ double TFC_Direct_ExprFunc::compPartFuncOn() const
           {
             PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * repEffects[x] * check_interaction[(sites[i]).factorIdx][x];
           } 
+          //cerr << "off :" << "\t" << PPI[i];
       }
         double sum = Zt[boundaries[i]];
         for ( int j = boundaries[i] + 1; j < i; j++ )
@@ -783,7 +788,7 @@ double TFC_Direct_ExprFunc::compPartFuncOn() const
         if( repIndicators[ sites[ i ].factorIdx ] )
             cout << "DEBUG 2: " << Zt[i] << "\t" << bindingWts[i]*repEffects[sites[i].factorIdx]*(Zt[ i - 1] + 1) << endl;*/
       }
-
+    //cerr << "on" << "\t" << Zt[n] << endl;  
     return Zt[n];
 }
 
@@ -810,6 +815,7 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
         {
           //cerr << "factorInt " << factorIntMat((sites[i]).factorIdx , x) << endl;
           PPI[i] += globalnu * tfc_concs[x] * factorIntMat((sites[i]).factorIdx , x) * check_interaction[(sites[i]).factorIdx][x]; 
+          //cerr << "on :" << "\t" << PPI[i];
           //cerr << i << "\t" << (sites[i]).factorIdx << "\t" << factorIntMat((sites[i]).factorIdx , x) * check_interaction[(sites[i]).factorIdx][x]<< endl;
         }
         //assert(false);
@@ -856,6 +862,7 @@ double TFC_Direct_ExprFunc::compPartFuncOff() const
     //  for ( int i = 0; i < sites.size(); i++ ) {
     //    Z_bind += Z[ i ];
     //  }
+    //cerr << "off" << "\t" << Zt[n] << "\t";
     return Zt[n];
 }
 
@@ -865,12 +872,13 @@ TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar
   #endif
   //globalnu = 1.0;
 
-//  cerr << "DEBUG" << endl;
-//  cerr << ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"] << endl;
-//  cerr << endl;
+  //  cerr << "DEBUG" << endl;
+  //  cerr << ((gsparams::DictList&)par.my_pars)["collective"]["globalnu"] << endl;
+  //  cerr << endl;
   //exit(1);
 
   globalnu = ((gsparams::DictList&)par.my_pars).at("collective").at("globalnu");
+  //globalnu = 1.0;
 
   //cerr << "Global scaling constant = " << globalnu << "\t" << "Instantiated TFC DIRECT.!" << endl;
   //assert(false);
@@ -884,6 +892,7 @@ TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar
     for(int j = 0; j < m; j++)
     { 
       check_interaction[i][j] = expr_model->coop_setup->has_coop(i,j);
+      //check_interaction[j][i] = check_interaction[i][j];
       //cerr << check_interaction[i][j] << "\t";
       //cerr << expr_model->coop_setup->has_coop(i,j) << "\t";
     }
@@ -891,7 +900,6 @@ TFC_Direct_ExprFunc::TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar
   }
 
   //assert(false);
-  
 }
 
 double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
@@ -906,6 +914,7 @@ double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
     //cout << "Z_off = " << Z_off << endl;
     double Z_on = compPartFuncOn();
     //cout << "Z_on = " << Z_on << endl;
+    //cout << Z_off << "\t" << Z_on << endl;
 
     // compute the expression (promoter occupancy)
     double efficiency = Z_on / Z_off;
