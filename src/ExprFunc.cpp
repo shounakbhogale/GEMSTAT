@@ -131,11 +131,12 @@ double ExprFunc::predictExpr( const vector< double >& factorConcs )
 
     // Thermodynamic models: Direct, Quenching, ChrMod_Unlimited and ChrMod_Limited
     // compute the partition functions
-    double Z_off = compPartFuncOff();
+    long double Z_off = compPartFuncOff();
     //cout << "Z_off = " << Z_off << endl;
-    double Z_on = compPartFuncOn();
+    long double Z_on = compPartFuncOn();
     //cout << "Z_on = " << Z_on << endl;
     //cout << Z_off << "\t" << Z_on << endl;
+    // cerr << Z_on << "\t" << Z_off << endl;
 
     // compute the expression (promoter occupancy)
     double efficiency = Z_on / Z_off;
@@ -145,6 +146,7 @@ double ExprFunc::predictExpr( const vector< double >& factorConcs )
     GEMSTAT_PROMOTER_DATA_T my_promoter = par.getPromoterData( this->seq_number );
 
     double promoterOcc = efficiency * my_promoter.basal_trans / ( 1.0 + efficiency * my_promoter.basal_trans /** ( 1 + my_promoter.pi )*/ );
+    // cerr << promoterOcc << "\t" << efficiency << endl;
     #ifdef DEBUG
     if(promoterOcc < 0.0 || promoterOcc != promoterOcc){
 	cerr << "Ridiculous in Direct!" << endl;
@@ -154,6 +156,7 @@ double ExprFunc::predictExpr( const vector< double >& factorConcs )
 	cerr << "basal " << my_promoter.basal_trans << endl; //TODO: I think I just found the bug.
 	cerr << "=====" << endl;
 	}
+
     #else
     assert(promoterOcc >= 0.0 && promoterOcc == promoterOcc);
     #endif
@@ -356,7 +359,7 @@ double Markov_ExprFunc::expr_from_config(const vector< double >& marginals){
 
 //ModelType ExprFunc::modelOption = QUENCHING;
 
-double ExprFunc::compPartFuncOff() const
+long double ExprFunc::compPartFuncOff() const
 {
     #ifdef DEBUG
       assert(modelOption != CHRMOD_UNLIMITED && modelOption != CHRMOD_LIMITED );
@@ -364,15 +367,15 @@ double ExprFunc::compPartFuncOff() const
 
     int n = n_sites;
     // initialization
-    vector< double > Z( n + 1 );
+    vector< long double > Z( n + 1 );
     Z[0] = 1.0;
-    vector< double > Zt( n + 1 );
+    vector< long double > Zt( n + 1 );
     Zt[0] = 1.0;
 
     // recurrence
     for ( int i = 1; i <= n; i++ )
     {
-        double sum = Zt[boundaries[i]];
+        long double sum = Zt[boundaries[i]];
         if( sum != sum )
         {
             cout << "DEBUG: sum nan" << "\t" << Zt[ boundaries[i] ] <<  endl;
@@ -384,7 +387,7 @@ double ExprFunc::compPartFuncOff() const
             if ( siteOverlap( sites[ i ], sites[ j ], motifs ) ) continue;
             //cout << "compFactorInt: " << compFactorInt( sites[ j ], sites[ i ] ) << "\t";
             //cout << "Z[j]: " << Z[ j ] << endl;
-            double old_sum = sum;
+            long double old_sum = sum;
             sum += compFactorInt( sites[ i ], sites[ j ] ) * Z[ j ];
             if( sum != sum || isinf( sum ))
             {
@@ -418,7 +421,7 @@ double ExprFunc::compPartFuncOff() const
 }
 
 
-double ChrMod_ExprFunc::compPartFuncOff() const
+long double ChrMod_ExprFunc::compPartFuncOff() const
 {
     int n = n_sites;
 
@@ -462,7 +465,7 @@ double ChrMod_ExprFunc::compPartFuncOff() const
 }
 
 
-double ExprFunc::compPartFuncOn() const
+long double ExprFunc::compPartFuncOn() const
 {
     /*
     if ( modelOption == DIRECT ) assert(false);//should never make it here.
@@ -476,20 +479,20 @@ double ExprFunc::compPartFuncOn() const
 }
 
 
-double Direct_ExprFunc::compPartFuncOn() const
+long double Direct_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
 
     // initialization
-    vector< double > Z( n + 1 );
+    vector< long double > Z( n + 1 );
     Z[0] = 1.0;
-    vector< double > Zt( n + 1 );
+    vector< long double > Zt( n + 1 );
     Zt[0] = 1.0;
 
     // recurrence
     for ( int i = 1; i <= n; i++ )
     {
-        double sum = Zt[boundaries[i]];
+        long double sum = Zt[boundaries[i]];
         for ( int j = boundaries[i] + 1; j < i; j++ )
         {
             if ( siteOverlap( sites[ i ], sites[ j ], motifs ) ) continue;
@@ -519,7 +522,7 @@ double Direct_ExprFunc::compPartFuncOn() const
 }
 
 
-double Quenching_ExprFunc::compPartFuncOn() const
+long double Quenching_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
     int N0 = maxContact;
@@ -594,7 +597,7 @@ double Quenching_ExprFunc::compPartFuncOn() const
 }
 
 
-double ChrModUnlimited_ExprFunc::compPartFuncOn() const
+long double ChrModUnlimited_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
 
@@ -638,7 +641,7 @@ double ChrModUnlimited_ExprFunc::compPartFuncOn() const
 }
 
 
-double ChrModLimited_ExprFunc::compPartFuncOn() const
+long double ChrModLimited_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
 
@@ -735,7 +738,7 @@ void TFC_Direct_ExprFunc::setupConcs(const vector< double >& factorConcs)
   }
 }
 
-double TFC_Direct_ExprFunc::compPartFuncOn() const
+long double TFC_Direct_ExprFunc::compPartFuncOn() const
 {
     int n = n_sites;
     int m = par.nFactors();
@@ -794,7 +797,7 @@ double TFC_Direct_ExprFunc::compPartFuncOn() const
 
 
 
-double TFC_Direct_ExprFunc::compPartFuncOff() const
+long double TFC_Direct_ExprFunc::compPartFuncOff() const
 {
     #ifdef DEBUG
       assert(modelOption != TFC_Direct && modelOption != TFC_Direct );
@@ -910,9 +913,9 @@ double TFC_Direct_ExprFunc::predictExpr( const vector< double >& factorConcs )
 
     // Thermodynamic models: Direct, Quenching, ChrMod_Unlimited and ChrMod_Limited
     // compute the partition functions
-    double Z_off = compPartFuncOff();
+    long double Z_off = compPartFuncOff();
     //cout << "Z_off = " << Z_off << endl;
-    double Z_on = compPartFuncOn();
+    long double Z_on = compPartFuncOn();
     //cout << "Z_on = " << Z_on << endl;
     //cout << Z_off << "\t" << Z_on << endl;
 

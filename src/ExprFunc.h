@@ -73,9 +73,9 @@ class ExprFunc
         bool testRepression( const Site& a, const Site& b ) const;
 
         // compute the partition function when the BTM is bound
-        virtual double compPartFuncOn() const;
+        virtual long double compPartFuncOn() const;
         // compute the partition function when the basal transcriptional machinery (BTM) is not bound
-        virtual double compPartFuncOff() const;
+        virtual long double compPartFuncOff() const;
 
 
         /*
@@ -120,7 +120,7 @@ class Direct_ExprFunc : public ExprFunc {
       Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    double compPartFuncOn() const;
+    long double compPartFuncOn() const;
 
 };
 
@@ -130,7 +130,7 @@ class Quenching_ExprFunc : public ExprFunc {
       Quenching_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    double compPartFuncOn() const;
+    long double compPartFuncOn() const;
 
 };
 
@@ -140,9 +140,9 @@ class ChrMod_ExprFunc : public ExprFunc {
       ChrMod_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    virtual double compPartFuncOn() const = 0;
+    virtual long double compPartFuncOn() const = 0;
     // compute the partition function when the basal transcriptional machinery (BTM) is not bound
-    double compPartFuncOff() const;
+    long double compPartFuncOff() const;
 
 };
 
@@ -152,7 +152,7 @@ class ChrModUnlimited_ExprFunc : public ChrMod_ExprFunc {
       ChrModUnlimited_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ChrMod_ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    double compPartFuncOn() const;
+    long double compPartFuncOn() const;
 };
 
 class ChrModLimited_ExprFunc : public ChrMod_ExprFunc {
@@ -161,7 +161,7 @@ class ChrModLimited_ExprFunc : public ChrMod_ExprFunc {
       ChrModLimited_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : ChrMod_ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    double compPartFuncOn() const;
+    long double compPartFuncOn() const;
 };
 
 class TFC_Direct_ExprFunc : public ExprFunc {
@@ -170,8 +170,8 @@ class TFC_Direct_ExprFunc : public ExprFunc {
       TFC_Direct_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num);// : ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
   protected:
     // compute the partition function when the BTM is bound
-    double compPartFuncOn() const;
-    double compPartFuncOff() const;
+    long double compPartFuncOn() const;
+    long double compPartFuncOff() const;
 
     double predictExpr( const vector< double >& factorConcs );
     void setupConcs(const vector< double >& factorConcs);

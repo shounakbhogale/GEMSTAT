@@ -119,15 +119,19 @@ Matrix::Matrix( const vector< vector< double > >& _data )
         cerr << "Matrix creation failed. nRows = " << nRows << " nCols = " << nCols << endl;
         exit( 1 );
     }
+    // int abc = 0;
     for ( int i = 0; i < nRows; i++ )
     {
         //         cout << "Row " << i << " Size = " << _data[i].size() << endl;
+        //cerr << nCols << "\t" << _data[i].size() << endl;
+        //abc = abc + 1;
         assert( _data[i].size() == nCols );
         for ( int j = 0; j < nCols; j++ )
         {
             gsl_matrix_set( data, i, j, _data[i][j] );
         }
     }
+    // cerr << abc << endl;
 }
 
 
