@@ -126,7 +126,7 @@ int writePredictions(const string& filename, ExprPredictor& predictor, const Mat
         // print the results
 				// observations
 				if( write_gt ){
-        	fout << predictor.seqs[i].getName() << "_GT" << "\t" << observedExprs << endl;
+        	fout << predictor.seqs[i].getName() << "_GT" << "\t" << observedExprs << "\t";
 				}
         fout << predictor.seqs[i].getName();
 

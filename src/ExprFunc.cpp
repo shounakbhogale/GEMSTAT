@@ -139,13 +139,14 @@ double ExprFunc::predictExpr( const vector< double >& factorConcs )
     // cerr << Z_on << "\t" << Z_off << endl;
 
     // compute the expression (promoter occupancy)
-    double efficiency = Z_on / Z_off;
+    long double efficiency = Z_on / Z_off;
     //cout << "efficiency = " << efficiency << endl;
     //cout << "basalTxp = " << basalTxps[ seq_num ] << endl;
 
     GEMSTAT_PROMOTER_DATA_T my_promoter = par.getPromoterData( this->seq_number );
 
     double promoterOcc = efficiency * my_promoter.basal_trans / ( 1.0 + efficiency * my_promoter.basal_trans /** ( 1 + my_promoter.pi )*/ );
+    // cerr << "promoterOcc = " << promoterOcc << endl;
     // cerr << promoterOcc << "\t" << efficiency << endl;
     #ifdef DEBUG
     if(promoterOcc < 0.0 || promoterOcc != promoterOcc){
