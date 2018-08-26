@@ -233,10 +233,10 @@ int main( int argc, char* argv[] )
              cout << ">" << seqNames[i] << endl;
              for ( int j = 0; j < seqSites[i].size(); j++ ){
 		    if( traditional_format){
-			    cout << seqSites[i][j] << endl;
+			    cout << seqSites[i][j] << "\t" << motifs[seqSites[i][j].factorIdx].getMaxLLR() << endl;
 		    }else{
 		    	altered_site_print(cout, seqSites[i][j], motifNames);
-		    	cout << endl;
+		    	cout << "\t" << motifs[seqSites[i][j].factorIdx].getMaxLLR() << endl;
 		    }
 		}
          }

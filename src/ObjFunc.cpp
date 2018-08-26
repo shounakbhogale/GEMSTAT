@@ -187,6 +187,7 @@ double PeakWeightedObjFunc::eval(const vector<vector<double> >& ground_truth, co
 
 double Weighted_RMSEObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
   const ExprPar* par){
+  	//cerr << "Weighted Objective called." << endl;
     #ifndef BETAOPTTOGETHER
         assert(false);
     #endif
@@ -206,20 +207,33 @@ double Weighted_RMSEObjFunc::eval(const vector<vector<double> >& ground_truth, c
           squaredErr += single_sqr_error;
       }
     }
-
+    //total_weight = 1;
     double rmse = sqrt( squaredErr / total_weight );
     return rmse;
 }
 
+double Weighted_ClassifierObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par)
+{
+	cerr << "Correct Objective selected." << endl;
+	return 1;
+}
+
 void Weighted_ObjFunc_Mixin::set_weights(Matrix *in_weights){
+	//cerr << "Weighted Objective called#" << endl;
     if(NULL != weights){delete weights;}
     weights = in_weights;
+    //cerr << weights->nRows() << "\t" << weights->nCols() << endl;
 
     //Caculate the total weight.
     total_weight = 0.0;
     for(int i = 0;i<weights->nRows();i++){
         for(int j = 0;j<weights->nCols();j++){
             total_weight+=weights->getElement(i,j);
+            //cerr << weights->getElement(i,j) << "\t";
         }
+        //cerr << endl;
     }
+    //cerr << total_weight << endl;
 }
+

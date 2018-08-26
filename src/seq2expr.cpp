@@ -221,6 +221,8 @@ int main( int argc, char* argv[] )
         ASSERT_MESSAGE( labels.size() == nSeqs , "Mismatch between number of labels and number of sequences");
         for ( int i = 0; i < nSeqs; i++ )
         {
+            //cerr << weights_labels[i] << endl;
+            //cerr << weights_data[i][0] << "\t" << weights_data[i][1] << endl;
             if( weights_labels[ i ] != seqNames[ i ] ) cout << weights_labels[i] << seqNames[i] << endl;
             ASSERT_MESSAGE( weights_labels[i] == seqNames[i] , "A label and a sequence name did not agree.");
         }
@@ -654,6 +656,8 @@ int main( int argc, char* argv[] )
 
     //Setup a weighted objective if that is appropriate
     if( predictor->objOption == WEIGHTED_SSE) {
+    //if( train_weights_loaded) {
+        cerr << "Weighted objective selected ##############." << endl;
         ASSERT_MESSAGE( train_weights_loaded , "User requested WEIGHTED_SSE objective, but provided no weights.");
         delete predictor->trainingObjective;
         Weighted_RMSEObjFunc *tmp_ptr = new Weighted_RMSEObjFunc();
@@ -661,6 +665,19 @@ int main( int argc, char* argv[] )
         predictor->trainingObjective = tmp_ptr;
         //TODO: log a message about this.
     }
+
+    if(predictor->objOption == WEIGHTED_CLASSIFIER)
+    {
+        //cerr << "Weighted objective selected ##############." << endl;
+        ASSERT_MESSAGE( train_weights_loaded , "User requested WEIGHTED_CLASSIFIER objective, but provided no weights.");
+        delete predictor->trainingObjective;
+        Weighted_ClassifierObjFunc *tmp_ptr = new Weighted_ClassifierObjFunc();
+        tmp_ptr->set_weights(training_weights);
+        predictor->trainingObjective = tmp_ptr;   
+        //delete tmp_ptr;
+    }
+
+
 
 
     //Setup regularization objective function

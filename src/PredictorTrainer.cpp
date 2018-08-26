@@ -16,6 +16,7 @@ ObjType getObjOption( const string& objOptionStr )
     if ( toupperStr( objOptionStr ) == "LOGISTIC_REGRESSION") return LOGISTIC_REGRESSION;
     if ( toupperStr( objOptionStr ) == "PEAK_WEIGHTED") return PEAK_WEIGHTED;
     if ( toupperStr( objOptionStr ) == "WEIGHTED_SSE") return WEIGHTED_SSE;
+    if ( toupperStr( objOptionStr ) == "WEIGHTED_CLASSIFIER") return WEIGHTED_CLASSIFIER;
 
 
     cerr << "objOptionStr is not a valid option of objective function" << endl;
@@ -32,6 +33,7 @@ string getObjOptionStr( ObjType objOption )
     if ( objOption == LOGISTIC_REGRESSION ) return "LOGISTIC_REGRESSION";
     if ( objOption == PEAK_WEIGHTED ) return "PEAK_WEIGHTED";
     if ( objOption == WEIGHTED_SSE ) return "WEIGHTED_SSE";
+    if ( objOption == WEIGHTED_CLASSIFIER ) return "WEIGHTED_CLASSIFIER";
 
     return "Invalid";
 }

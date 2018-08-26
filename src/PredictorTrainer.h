@@ -20,7 +20,8 @@ enum ObjType
     PGP,                                           // PGP score
     LOGISTIC_REGRESSION,                            // Logistic Regression
     PEAK_WEIGHTED,                                  // SSE with equal weight to peaks and non-peaks
-    WEIGHTED_SSE                                  //User provides weights for sse.
+    WEIGHTED_SSE, 
+    WEIGHTED_CLASSIFIER                                 //User provides weights for sse.
 };
 
 ObjType getObjOption( const string& objOptionStr );

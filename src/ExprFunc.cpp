@@ -519,6 +519,7 @@ long double Direct_ExprFunc::compPartFuncOn() const
     }
 
     return Zt[n];
+    cerr << "Zt  " << Zt[n] << endl; 
     //cerr << "on" << "\t" << Zt[n] << endl; 
 }
 

@@ -99,9 +99,15 @@ void ExprPredictor::set_objective_option( ObjType in_obj_option ){
       case LOGISTIC_REGRESSION:
         trainingObjective = new LogisticRegressionObjFunc();
         break;
-	case PEAK_WEIGHTED:
+	  case PEAK_WEIGHTED:
 		trainingObjective = new PeakWeightedObjFunc();
 		break;
+      //case WEIGHTED_CLASSIFIER :
+        //trainingObjective = new Weighted_ClassifierObjFunc();
+        //break;
+      //case WEIGHTED_SSE:
+        //trainingObjective = new Weighted_RMSEObjFunc();
+        //break;  
       case SSE:
       default:
         trainingObjective = new RMSEObjFunc();
@@ -125,7 +131,7 @@ int ExprPredictor::train( const ExprPar& par_init )
     cout << "Parameters: " << endl;
     printPar( par_model );
     cout << endl;
-    cout << "Objective function value: " << objFunc( par_model ) << endl;
+    cout << " Objective function value: " << objFunc( par_model ) << endl;
     cout << "*******************************************" << endl << endl;
 
     if ( n_alternations > 0 && this->search_option == CONSTRAINED ){
