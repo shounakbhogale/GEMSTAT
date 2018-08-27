@@ -653,11 +653,11 @@ int main( int argc, char* argv[] )
     predictor->max_simplex_iterations = cmdline_max_simplex_iterations;
     predictor->max_gradient_iterations = cmdline_max_gradient_iterations;
 
-
+    //delete predictor->trainingObjective;
     //Setup a weighted objective if that is appropriate
     if( predictor->objOption == WEIGHTED_SSE) {
     //if( train_weights_loaded) {
-        cerr << "Weighted objective selected ##############." << endl;
+        //cerr << "Weighted objective selected ##############." << endl;
         ASSERT_MESSAGE( train_weights_loaded , "User requested WEIGHTED_SSE objective, but provided no weights.");
         delete predictor->trainingObjective;
         Weighted_RMSEObjFunc *tmp_ptr = new Weighted_RMSEObjFunc();
@@ -668,7 +668,7 @@ int main( int argc, char* argv[] )
 
     if(predictor->objOption == WEIGHTED_CLASSIFIER)
     {
-        //cerr << "Weighted objective selected ##############." << endl;
+        cerr << "Weighted objective selected ##############." << endl;
         ASSERT_MESSAGE( train_weights_loaded , "User requested WEIGHTED_CLASSIFIER objective, but provided no weights.");
         delete predictor->trainingObjective;
         Weighted_ClassifierObjFunc *tmp_ptr = new Weighted_ClassifierObjFunc();

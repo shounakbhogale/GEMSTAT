@@ -212,12 +212,25 @@ double Weighted_RMSEObjFunc::eval(const vector<vector<double> >& ground_truth, c
     return rmse;
 }
 
+/*
 double Weighted_ClassifierObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
   const ExprPar* par)
 {
-	cerr << "Correct Objective selected." << endl;
-	return 1;
+	//cerr << "Correct Objective selected." << endl;
+  #ifndef BETAOPTTOGETHER
+    assert(false);
+  #endif
+
+  assert(ground_truth.size() == prediction.size());
+  int nSeqs = ground_truth.size();
+  int nConds = ground_truth[0].size();
+  double classifierErr = 0.0;
+
+  for(int i = 0;i<ground_truth.size();i++)
+
+	//return 1;
 }
+*/
 
 void Weighted_ObjFunc_Mixin::set_weights(Matrix *in_weights){
 	//cerr << "Weighted Objective called#" << endl;
@@ -234,6 +247,6 @@ void Weighted_ObjFunc_Mixin::set_weights(Matrix *in_weights){
         }
         //cerr << endl;
     }
-    //cerr << total_weight << endl;
+    cerr << total_weight << endl;
 }
 

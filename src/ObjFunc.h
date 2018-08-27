@@ -102,13 +102,13 @@ public:
 };
 
 class Weighted_ClassifierObjFunc : public RMSEObjFunc, public Weighted_ObjFunc_Mixin
-//class Weighted_ClassifierObjFunc : public RMSEObjFunc
+//class Weighted_ClassifierObjFunc : public ObjFunc
 {
   public : 
   Weighted_ClassifierObjFunc() : RMSEObjFunc(), Weighted_ObjFunc_Mixin() {}
   //Weighted_ClassifierObjFunc() : ObjFunc(), Weighted_ObjFunc_Mixin() {}
-  ~Weighted_ClassifierObjFunc(){}
-  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+  ~Weighted_ClassifierObjFunc(){ cerr << "In weighted destructor???" << endl; }
+  //double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
 };
 
 #endif
