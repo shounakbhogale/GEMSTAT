@@ -103,6 +103,7 @@ int readAxisWeights(const string& filename, vector< int >& axis_start, vector< i
 
 int writePredictions(const string& filename, ExprPredictor& predictor, const Matrix& exprData, vector< string >& expr_condNames, bool write_gt, bool fix_beta /*= false*/){
 	// print the predictions
+	//ofstream threshout("threshold.txt");
 	ofstream fout( filename.c_str() );
 	if ( !fout )
 	{
@@ -117,9 +118,39 @@ int writePredictions(const string& filename, ExprPredictor& predictor, const Mat
 
 	fout << "Rows\t" << expr_condNames << endl;
 
+	/*if(objtype == "Learn" && predtype == "Classifier")
+	{
+		for(int j = 0; j < predictor.nConds(); j++)
+		{
+			double temp = 0.0;
+			for ( int i = 0; i < predictor.nSeqs(); i++ )
+			{
+				temp = temp + (exprData.getRow(i)[j]*predictions[i][j])/float(predictor.nSeqs());
+			}
+			threshold[j] = temp;
+		}
+		threshout << threshold << endl;		
+	}*/
+
+
 	for ( int i = 0; i < predictor.nSeqs(); i++ )
     {
         vector< double > targetExprs = predictions[i];
+        /*if(predtype == "Classifier")
+        {
+        	vector<double> class_predictions(predictor.nConds(), 0);
+        	if(objtype == "Predict")
+        	{
+        		for(int j = 0; j < predictor.nConds(); j++)
+        		{
+        			class_predictions[j] = (targetExprs[j] > threshold[j]);
+        		}
+        		//threshout << "It works." << endl;
+        		//threshout << threshold << endl;
+        		//threshout << predictor.nConds() << endl;
+        		//threshout << class_predictions << endl;
+        	}
+        }*/
         vector< double > observedExprs = exprData.getRow( i );
 
         // error
@@ -150,5 +181,109 @@ int writePredictions(const string& filename, ExprPredictor& predictor, const Mat
         cout << predictor.seqs[i].getName() << "\t" << beta << "\t" << error_or_score << endl;
     }
 
+    //ofstream threshout("threshold.txt");
+    //if(predtype == "Classifier")
+    //{
+    //	threshout << "############# It's working. ##############" << endl;
+    //	threshout << threshold << endl;
+    //}
+
 	return 0;
+}
+
+int writePredictions_classifier(const string& filename, ExprPredictor& predictor, const Matrix& exprData, vector< string >& expr_condNames, vector<double>& threshold, bool learn, bool write_gt, bool fix_beta /*= false*/)
+{
+	ofstream fout( filename.c_str() );
+	if ( !fout )
+	{
+		cerr << "Cannot open file " << filename << endl;
+		exit( 1 );
+	}
+	ExprPar par = predictor.getPar();
+	//SiteVec unusedSV = SiteVec();
+	vector< vector< double > > predictions;
+
+	predictor.predict_all(par, predictions);
+
+	fout << "Rows\t" << expr_condNames << "\tRows_Classifier\t" << expr_condNames << "\tRows_Actual\t" << expr_condNames << endl;
+	if(learn == true)
+	{
+
+		//cerr << "learn activated" << endl;	
+		ofstream threshout("threshold.txt");
+		for(int j = 0; j < predictor.nConds(); j++)
+		{
+			double temp1 = 0.0;
+			double temp0 = 0.0;
+			int count1 = 0;
+			int count0 = 0;
+			for ( int i = 0; i < predictor.nSeqs(); i++ )
+			{
+				temp1 = temp1 + exprData.getRow(i)[j]*predictions[i][j];
+				temp0 += (1-exprData.getRow(i)[j])*predictions[i][j];
+				count1 = count1 + exprData.getRow(i)[j];
+				count0 += (1 - exprData.getRow(i)[j]);
+				//temp = temp + predictions[i][j]/float(predictor.nSeqs());
+			}
+			double temp = (temp1/float(count1) + temp0/float(count0))/2;
+			threshold.push_back(temp);
+		}	
+		threshout << threshold << endl;
+	}
+
+
+	for ( int i = 0; i < predictor.nSeqs(); i++ )
+    {
+        vector< double > targetExprs = predictions[i];
+        vector<double> class_predictions(predictor.nConds(), 0);
+        for(int j = 0; j < predictor.nConds(); j++)
+    	{
+       		class_predictions[j] = (targetExprs[j] > threshold[j]);
+    	}
+		vector< double > observedExprs = exprData.getRow( i );
+
+        // error
+        // print the results
+				// observations
+		if( write_gt )
+		{
+        fout << predictor.seqs[i].getName() << "_GT" << "\t" << observedExprs << "\t";
+		}
+        fout << predictor.seqs[i].getName();
+
+        double beta = par.getBetaForSeq(i);
+		double error_or_score;
+		vector<vector<double> > multiple_predictions;
+		vector<vector<double> > multiple_observations;
+		multiple_predictions.push_back(targetExprs);
+		multiple_observations.push_back(observedExprs);
+
+		error_or_score = predictor.trainingObjective->eval(multiple_predictions, multiple_observations, &par);
+		
+        for ( int j = 0; j < predictor.nConds(); j++ )
+        {
+			//fout << "\t" << ( beta * targetExprs[j] );
+			fout << "\t" << class_predictions[j];
+		}
+		fout << "\t" << predictor.seqs[i].getName();
+		for ( int j = 0; j < predictor.nConds(); j++ )
+		{
+			fout << "\t" << ( beta * targetExprs[j] );
+			//fout << "\t" << targetExprs[j];
+			//fout << "\t" << class_predictions[j];
+		}	
+		fout << endl;
+
+        // print the agreement bewtween predictions and observations
+        cout << predictor.seqs[i].getName() << "\t" << beta << "\t" << error_or_score << endl;
+    }
+
+    //ofstream threshout("threshold.txt");
+    //if(predtype == "Classifier")
+    //{
+    //	threshout << "############# It's working. ##############" << endl;
+    //	threshout << threshold << endl;
+    //}
+
+	return 0;	
 }

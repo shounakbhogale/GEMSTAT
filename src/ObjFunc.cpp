@@ -212,25 +212,334 @@ double Weighted_RMSEObjFunc::eval(const vector<vector<double> >& ground_truth, c
     return rmse;
 }
 
-/*
-double Weighted_ClassifierObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
-  const ExprPar* par)
+
+void Weighted_ClassifierObjFunc::Fconverter(vector<vector<double> >& f_prediction)
 {
-	//cerr << "Correct Objective selected." << endl;
+  for(int i = 0; i < f_prediction.size(); i ++)
+  {
+    for(int j = 0; j < f_prediction[0].size(); j++)
+    {
+      double temp = f_prediction[i][j];
+      if(temp == 0)
+      {
+        temp = 0.00001;
+      }
+      if(temp == 1)
+      {
+        temp = 0.99999;
+      }
+      f_prediction[i][j] = (1-temp)/double(temp);
+    }
+  }
+}
+
+double Weighted_ClassifierObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,const ExprPar* par)
+{
+  vector<vector<double> > f_prediction = prediction;
+  Fconverter(f_prediction);
+  double error = 0;
+
   #ifndef BETAOPTTOGETHER
     assert(false);
   #endif
 
+  assert(ground_truth.size() == f_prediction.size());
+  int nSeqs = ground_truth.size();
+  int nConds = ground_truth[0].size();
+
+  for(int i = 0; i < nSeqs; i++)
+  {
+    for(int j = 0; j < nConds; j++)
+    {
+      if(ground_truth[i][j] == 0)
+      {
+        error += log(1 + 1/float(f_prediction[i][j]));
+      }
+      else if(ground_truth[i][j] == 1)
+      {
+        error += log(1 + f_prediction[i][j]);
+      }
+    }
+  }
+  return error;
+}
+
+double tTestKindaObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,const ExprPar* par)
+{
+  double t_error = 0;
+
   assert(ground_truth.size() == prediction.size());
   int nSeqs = ground_truth.size();
   int nConds = ground_truth[0].size();
-  double classifierErr = 0.0;
+  
+  for(int j = 0; j < nConds; j++)
+  {
+    int nExpr = 0;
+    int nNotExpr = 0;
+    double meanExpr = 0;
+    double meanNotExpr = 0;
+    double meanSqrExpr = 0;
+    double meanSqrNotExpr = 0;
 
-  for(int i = 0;i<ground_truth.size();i++)
-
-	//return 1;
+    for(int i = 0; i < nSeqs; i++)
+    {
+      double beta = 1.0;
+      if(NULL != par){ beta = par->getBetaForSeq(i); }
+      if(ground_truth[i][j] == 1)
+      {
+        nExpr += 1;
+        meanExpr += beta*prediction[i][j];
+        meanSqrExpr += pow(beta*prediction[i][j], 2);
+      }
+      else if(ground_truth[i][j] == 0)
+      {
+        nNotExpr += 1;
+        meanNotExpr += beta*prediction[i][j];
+        meanSqrNotExpr += pow(beta*prediction[i][j], 2); 
+      }      
+    }
+    meanExpr = meanExpr/float(nExpr);
+    meanNotExpr = meanNotExpr/float(nNotExpr);
+    meanSqrExpr = meanSqrExpr/float(nExpr);
+    meanSqrNotExpr = meanSqrNotExpr/float(nNotExpr);
+    double varExpr_wt = (meanSqrExpr - pow(meanExpr,2))/float(nExpr);
+    double varNotExpr_wt = (meanSqrNotExpr - pow(meanNotExpr,2))/float(nNotExpr);
+    double var = varExpr_wt + varNotExpr_wt;
+    if(var <= 0)
+    {
+      var = 0.00000001;
+    }
+    t_error += (meanNotExpr - meanExpr)/sqrt(var);
+  }
+  
+  return t_error;
 }
-*/
+
+//combined weighted sse and t-test objective with weight lambda for t-test. 
+double t_WSSE_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,const ExprPar* par)
+{
+  double t_error = 0;
+  double squaredErr = 0.0;
+  double lambda = 0.01;
+
+  assert(ground_truth.size() == prediction.size());
+  int nSeqs = ground_truth.size();
+  int nConds = ground_truth[0].size();
+  
+  for(int j = 0; j < nConds; j++)
+  {
+    int nExpr = 0;
+    int nNotExpr = 0;
+    double meanExpr = 0;
+    double meanNotExpr = 0;
+    double meanSqrExpr = 0;
+    double meanSqrNotExpr = 0;
+
+    for(int i = 0; i < nSeqs; i++)
+    {
+      double beta = 1.0;
+      if(NULL != par){ beta = par->getBetaForSeq(i); }
+      if(ground_truth[i][j] == 1)
+      {
+        nExpr += 1;
+        //meanExpr += beta*prediction[i][j];
+        //meanSqrExpr += pow(beta*prediction[i][j], 2);
+        meanExpr += prediction[i][j];
+        meanSqrExpr += pow(prediction[i][j], 2);
+      }
+      else if(ground_truth[i][j] == 0)
+      {
+        nNotExpr += 1;
+        //meanNotExpr += beta*prediction[i][j];
+        //meanSqrNotExpr += pow(beta*prediction[i][j], 2); 
+        meanNotExpr += prediction[i][j];
+        meanSqrNotExpr += pow(prediction[i][j], 2); 
+      }
+      double single_sqr_error = (beta*prediction[i][j] - ground_truth[i][j]);
+      single_sqr_error = weights->getElement(i,j)*pow(single_sqr_error,2);
+      squaredErr += single_sqr_error;
+    }
+    meanExpr = meanExpr/float(nExpr);
+    meanNotExpr = meanNotExpr/float(nNotExpr);
+    meanSqrExpr = meanSqrExpr/float(nExpr);
+    meanSqrNotExpr = meanSqrNotExpr/float(nNotExpr);
+    double varExpr_wt = (meanSqrExpr - pow(meanExpr,2))/float(nExpr);
+    double varNotExpr_wt = (meanSqrNotExpr - pow(meanNotExpr,2))/float(nNotExpr);
+    double var = varExpr_wt + varNotExpr_wt;
+    if(var <= 0)
+    {
+      var = 0.00000001;
+    }
+    //t_error += pow((meanNotExpr - meanExpr),3)/var; 
+    t_error += (meanNotExpr - meanExpr)/sqrt(var);
+   }
+  double wsse = sqrt( squaredErr / total_weight ); 
+  //double error = wsse - lambda*t_error;
+  double error = wsse + lambda*t_error;
+  return error;
+}
+
+double t_WSSE_dot_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,const ExprPar* par)
+{ 
+  double t_error = 0;
+  double squaredErr = 0.0;
+  double lambda = 0.01;
+  vector<double> betas;
+  double temp = 0.0;
+  double norm = 0.0;
+  double gt_norm = 0.0;
+  double temp_beta = 0.0;
+
+  assert(ground_truth.size() == prediction.size());
+  int nSeqs = ground_truth.size();
+  int nConds = ground_truth[0].size();
+
+  for(int i = 0; i < nSeqs; i++)
+  { 
+    temp = 0.0;
+    norm = 0.0;
+    for(int j = 0; j < nConds; j++)
+    {
+      temp += prediction[i][j]*ground_truth[i][j];
+      norm += prediction[i][j]*prediction[i][j];
+      gt_norm += ground_truth[i][j]*ground_truth[i][j];
+    }
+    temp_beta = temp/(norm*sqrt(gt_norm));
+    betas.push_back(temp_beta);
+  }
+  
+  for(int j = 0; j < nConds; j++)
+  {
+    int nExpr = 0;
+    int nNotExpr = 0;
+    double meanExpr = 0;
+    double meanNotExpr = 0;
+    double meanSqrExpr = 0;
+    double meanSqrNotExpr = 0;
+
+    for(int i = 0; i < nSeqs; i++)
+    {
+      double beta = 1.0;
+      beta = betas[i];
+      if(ground_truth[i][j] == 1)
+      {
+        nExpr += 1;
+        meanExpr += beta*prediction[i][j];
+        meanSqrExpr += pow(beta*prediction[i][j], 2);
+        //meanExpr += prediction[i][j];
+        //meanSqrExpr += pow(prediction[i][j], 2);
+      }
+      else if(ground_truth[i][j] == 0)
+      {
+        nNotExpr += 1;
+        meanNotExpr += beta*prediction[i][j];
+        meanSqrNotExpr += pow(beta*prediction[i][j], 2); 
+        //meanNotExpr += prediction[i][j];
+        //meanSqrNotExpr += pow(prediction[i][j], 2); 
+      }
+      double single_sqr_error = (beta*prediction[i][j] - ground_truth[i][j]);
+      single_sqr_error = weights->getElement(i,j)*pow(single_sqr_error,2);
+      squaredErr += single_sqr_error;
+    }
+    meanExpr = meanExpr/float(nExpr);
+    meanNotExpr = meanNotExpr/float(nNotExpr);
+    meanSqrExpr = meanSqrExpr/float(nExpr);
+    meanSqrNotExpr = meanSqrNotExpr/float(nNotExpr);
+    double varExpr_wt = (meanSqrExpr - pow(meanExpr,2))/float(nExpr);
+    double varNotExpr_wt = (meanSqrNotExpr - pow(meanNotExpr,2))/float(nNotExpr);
+    double var = varExpr_wt + varNotExpr_wt;
+    if(var <= 0)
+    {
+      var = 0.0000000000001;
+    } 
+    t_error += (meanNotExpr - meanExpr)/sqrt(var);
+   }
+  double wsse = sqrt( squaredErr / total_weight ); 
+  double error = wsse + lambda*t_error;
+  return error;
+}
+
+double SeqWise_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,const ExprPar* par)
+{
+  double t_error = 0;
+  double squaredErr = 0.0;
+  double lambda = 0.01;
+  assert(ground_truth.size() == prediction.size());
+  int nSeqs = ground_truth.size();
+  int nConds = ground_truth[0].size();
+  double maxterror = -0.000000001;
+  for(int i = 0; i < nSeqs; i++)
+  {
+    int nExpr = 0;
+    int nNotExpr = 0;
+    double meanExpr = 0;
+    double meanNotExpr = 0;
+    double meanSqrExpr = 0;
+    double meanSqrNotExpr = 0;
+    double varExpr_wt = 0;
+    double varNotExpr_wt = 0;
+
+    for(int j = 0; j < nConds; j++)
+    {
+
+      double beta = 1.0;
+      //beta = betas[i];
+      if(ground_truth[i][j] == 1)
+      {
+        nExpr += 1;
+        meanExpr += beta*prediction[i][j];
+        meanSqrExpr += pow(beta*prediction[i][j], 2);
+        //meanExpr += prediction[i][j];
+        //meanSqrExpr += pow(prediction[i][j], 2);
+      }
+      else if(ground_truth[i][j] == 0)
+      {
+        nNotExpr += 1;
+        meanNotExpr += beta*prediction[i][j];
+        meanSqrNotExpr += pow(beta*prediction[i][j], 2); 
+        //meanNotExpr += prediction[i][j];
+        //meanSqrNotExpr += pow(prediction[i][j], 2); 
+      }
+      double single_sqr_error = (beta*prediction[i][j] - ground_truth[i][j]);
+      single_sqr_error = weights->getElement(i,j)*pow(single_sqr_error,2);
+      squaredErr += single_sqr_error;
+    }
+
+    meanExpr = meanExpr/float(nExpr);
+    meanSqrExpr = meanSqrExpr/float(nExpr);
+    varExpr_wt = (meanSqrExpr - pow(meanExpr,2))/float(nExpr);
+    if(nNotExpr == 0)
+    {
+      meanNotExpr = 0;
+      meanSqrNotExpr = 0;
+      varNotExpr_wt = 0;
+    }
+    else
+    {
+      meanNotExpr = meanNotExpr/float(nNotExpr);
+      meanSqrNotExpr = meanSqrNotExpr/float(nNotExpr);
+      varNotExpr_wt = (meanSqrNotExpr - pow(meanNotExpr,2))/float(nNotExpr); 
+    }
+    double var = varExpr_wt + varNotExpr_wt;
+    if(var <= 0)
+    {
+      var = 0.00000001;
+    }
+    double tempTerror = (meanNotExpr - meanExpr)/sqrt(var);
+    if(tempTerror < maxterror)
+    {
+      maxterror = tempTerror; 
+    }
+    t_error += tempTerror ;
+  }
+  double wsse = sqrt( squaredErr / total_weight ); 
+  double error = wsse + lambda*t_error/maxterror;
+  //return t_error/maxterror;
+  return t_error;
+  //return error;  
+}
+
+
 
 void Weighted_ObjFunc_Mixin::set_weights(Matrix *in_weights){
 	//cerr << "Weighted Objective called#" << endl;

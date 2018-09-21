@@ -181,15 +181,15 @@ class TFC_Direct_ExprFunc : public ExprFunc {
     vector<vector<int> > check_interaction;
 };
 
-class Classifier_ExprFunc : public Direct_ExprFunc {
-  public:
+//class Classifier_ExprFunc : public Direct_ExprFunc {
+//  public:
       // constructors
-      Classifier_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : Direct_ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
-  protected:
+//      Classifier_ExprFunc( const ExprModel* _model, const ExprPar& _par , const SiteVec& sites_, const int seq_len, const int seq_num) : Direct_ExprFunc( _model, _par , sites_, seq_len, seq_num){} ;
+//  protected:
     // compute the partition function when the BTM is bound
     //long double compPartFuncOn() const;
 
-};
+//};
 
 
 #endif

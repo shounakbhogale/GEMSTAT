@@ -17,6 +17,10 @@ ObjType getObjOption( const string& objOptionStr )
     if ( toupperStr( objOptionStr ) == "PEAK_WEIGHTED") return PEAK_WEIGHTED;
     if ( toupperStr( objOptionStr ) == "WEIGHTED_SSE") return WEIGHTED_SSE;
     if ( toupperStr( objOptionStr ) == "WEIGHTED_CLASSIFIER") return WEIGHTED_CLASSIFIER;
+    if ( toupperStr( objOptionStr ) == "T_TEST") return T_TEST;
+    if ( toupperStr( objOptionStr ) == "T_TEST_WSSE") return T_TEST_WSSE;
+    if ( toupperStr( objOptionStr ) == "T_WSSE_DOT") return T_WSSE_DOT;
+    if ( toupperStr( objOptionStr ) == "SEQWISE") return SEQWISE;
 
 
     cerr << "objOptionStr is not a valid option of objective function" << endl;
@@ -34,6 +38,10 @@ string getObjOptionStr( ObjType objOption )
     if ( objOption == PEAK_WEIGHTED ) return "PEAK_WEIGHTED";
     if ( objOption == WEIGHTED_SSE ) return "WEIGHTED_SSE";
     if ( objOption == WEIGHTED_CLASSIFIER ) return "WEIGHTED_CLASSIFIER";
+    if ( objOption == T_TEST ) return "T_TEST";
+    if ( objOption == T_TEST_WSSE ) return "T_TEST_WSSE";
+    if ( objOption == T_WSSE_DOT ) return "T_WSSE_DOT";
+    if ( objOption == SEQWISE ) return "SEQWISE";
 
     return "Invalid";
 }

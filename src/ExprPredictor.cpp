@@ -102,6 +102,12 @@ void ExprPredictor::set_objective_option( ObjType in_obj_option ){
 	  case PEAK_WEIGHTED:
 		trainingObjective = new PeakWeightedObjFunc();
 		break;
+      case T_TEST:
+        trainingObjective = new tTestKindaObjFunc();
+        break; 
+    //case T_TEST_WSSE:
+        //trainingObjective = new t_WSSE_ObjFunc();
+        //break; 
       //case WEIGHTED_CLASSIFIER :
         //trainingObjective = new Weighted_ClassifierObjFunc();
         //break;

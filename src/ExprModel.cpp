@@ -39,7 +39,7 @@ ModelType getModelOption( const string& modelOptionStr )
     if ( toupperStr( modelOptionStr ) == "RATES" ) return RATES;
     if ( toupperStr( modelOptionStr ) == "MARKOV" ) return MARKOV;
     if ( toupperStr( modelOptionStr ) == "TFC_DIRECT" ) return TFC_DIRECT;
-    if ( toupperStr( modelOptionStr ) == "CLASSIFIER" ) return CLASSIFIER;
+    //if ( toupperStr( modelOptionStr ) == "CLASSIFIER" ) return CLASSIFIER;
 
     cerr << "modelOptionStr is not a valid model option" << endl;
     exit(1);
@@ -56,7 +56,7 @@ string getModelOptionStr( ModelType modelOption )
     if ( modelOption == RATES ) return "Rates";
     if ( modelOption == MARKOV ) return "Markov";
     if ( modelOption == TFC_DIRECT ) return "TFC_Direct";
-    if ( modelOption == CLASSIFIER ) return "Classifier";
+    //if ( modelOption == CLASSIFIER ) return "Classifier";
 
     return "Invalid";
 }
@@ -94,9 +94,9 @@ ExprFunc* ExprModel::createNewExprFunc( const ExprPar& par, const SiteVec& sites
         parToPass = par.my_factory->changeSpace(par, PROB_SPACE );
         return_exprfunc = new TFC_Direct_ExprFunc(this, parToPass, sites_,seq_length,seq_num);
         break;
-    case CLASSIFIER:
-        parToPass = par.my_factory->changeSpace(par, PROB_SPACE );
-        return_exprfunc = new Classifier_ExprFunc(this, parToPass, sites_,seq_length,seq_num);
+    //case CLASSIFIER:
+    //    parToPass = par.my_factory->changeSpace(par, PROB_SPACE );
+    //    return_exprfunc = new Classifier_ExprFunc(this, parToPass, sites_,seq_length,seq_num);
         break;
     default :
         cerr << "Somehow, an invalid model argument was passed. " << endl;

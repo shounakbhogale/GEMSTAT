@@ -85,6 +85,12 @@ int main( int argc, char* argv[] )
     ExprPredictor::min_delta_f_CrossCorr = 1.0E-10;
     int cmdline_max_simplex_iterations = 400;
     int cmdline_max_gradient_iterations = 50;
+
+    string jobtype = "Prediction";
+    bool learn = true;
+    string threshold_file;
+    
+
     for ( int i = 1; i < argc; i++ )
     {
         if ( !strcmp( "-s", argv[ i ] ) )
@@ -162,7 +168,15 @@ int main( int argc, char* argv[] )
             cmdline_interaction_option_str = argv[ ++i ];
     else if( !strcmp("-train_weights", argv[ i ]))
         train_weights_filename = argv[ ++i ];
+    else if (!strcmp("-job", argv[ i ]))
+        jobtype = argv[ ++i ];
+    //else if (!strcmp("-learn", argv[ i ]))
+    //    learn = true;
+    else if (!strcmp("-thresholds", argv[ i ]))
+        threshold_file = argv[ ++i ],
+        learn = false;
     }
+    
 
     if ( seqFile.empty() || exprFile.empty() || motifFile.empty() || factorExprFile.empty() || outFile.empty() || ( ( cmdline_modelOption == QUENCHING || cmdline_modelOption == CHRMOD_UNLIMITED || cmdline_modelOption == CHRMOD_LIMITED ) &&  factorInfoFile.empty() ) || ( cmdline_modelOption == QUENCHING && repressionFile.empty() ) )
     {
@@ -209,6 +223,15 @@ int main( int argc, char* argv[] )
     Matrix exprData( data );
     int nConds = exprData.nCols();
     vector < string > expr_condNames = condNames;
+
+    //read the thresholds if provided
+    vector<double> thresholds;
+    if(! threshold_file.empty())
+    {
+        readVector(threshold_file, thresholds);
+    }
+
+
 
     //read the weights if provided
     Matrix *training_weights = NULL;
@@ -668,10 +691,43 @@ int main( int argc, char* argv[] )
 
     if(predictor->objOption == WEIGHTED_CLASSIFIER)
     {
-        cerr << "Weighted objective selected ##############." << endl;
+        //cerr << "Weighted objective selected ##############." << endl;
         ASSERT_MESSAGE( train_weights_loaded , "User requested WEIGHTED_CLASSIFIER objective, but provided no weights.");
         delete predictor->trainingObjective;
         Weighted_ClassifierObjFunc *tmp_ptr = new Weighted_ClassifierObjFunc();
+        tmp_ptr->set_weights(training_weights);
+        predictor->trainingObjective = tmp_ptr;   
+        //delete tmp_ptr;
+    }
+
+    if(predictor->objOption == T_TEST_WSSE)
+    {
+        //cerr << "Weighted objective selected ##############." << endl;
+        ASSERT_MESSAGE( train_weights_loaded , "User requested T_TEST_WSSE objective, but provided no weights.");
+        delete predictor->trainingObjective;
+        t_WSSE_ObjFunc *tmp_ptr = new t_WSSE_ObjFunc();
+        tmp_ptr->set_weights(training_weights);
+        predictor->trainingObjective = tmp_ptr;   
+        //delete tmp_ptr;
+    }
+
+    if(predictor->objOption == T_WSSE_DOT)
+    {
+        //cerr << "Weighted objective selected ##############." << endl;
+        ASSERT_MESSAGE( train_weights_loaded , "User requested T_TEST_WSSE objective, but provided no weights.");
+        delete predictor->trainingObjective;
+        t_WSSE_dot_ObjFunc *tmp_ptr = new t_WSSE_dot_ObjFunc();
+        tmp_ptr->set_weights(training_weights);
+        predictor->trainingObjective = tmp_ptr;   
+        //delete tmp_ptr;
+    }
+
+        if(predictor->objOption == SEQWISE)
+    {
+        //cerr << "Weighted objective selected ##############." << endl;
+        ASSERT_MESSAGE( train_weights_loaded , "User requested T_TEST_WSSE objective, but provided no weights.");
+        delete predictor->trainingObjective;
+        SeqWise_ObjFunc *tmp_ptr = new SeqWise_ObjFunc();
         tmp_ptr->set_weights(training_weights);
         predictor->trainingObjective = tmp_ptr;   
         //delete tmp_ptr;
@@ -781,7 +837,24 @@ int main( int argc, char* argv[] )
     cout << "Performance = " << setprecision( 5 ) << ( ( cmdline_obj_option == SSE || cmdline_obj_option == PGP ) ? predictor->getObj() : -predictor->getObj() ) << endl;
 
     // print the predictions
-    writePredictions(outFile, *predictor, training_dataset.exprData, expr_condNames, cmdline_write_gt, true);
+    //vector<double> thresholdvect(predictor->nConds(), 0.2);
+    //string predtype = "Classifier";
+    //string objtype = "Predict";
+    //string objtype = "Learn";
+
+
+
+    //thresholdvect, predtype, objtype,
+    if(jobtype == "Prediction")
+    {
+       writePredictions(outFile, *predictor, training_dataset.exprData, expr_condNames, cmdline_write_gt, true); 
+    }
+    else if(jobtype == "Classifier")
+    {
+        //cerr << "classifier activated" << endl; 
+        writePredictions_classifier(outFile, *predictor, training_dataset.exprData, expr_condNames, thresholds, learn, cmdline_write_gt, true); 
+    }
+    
 
     //TODO: R_SEQ Either remove this feature or make it conditional.
     /*
@@ -799,5 +872,8 @@ int main( int argc, char* argv[] )
     cout << i + 1 << "\t" << max << endl;
     }
     */
+    cerr << jobtype << endl;
+    cerr << learn << endl;
+    cerr << thresholds << endl;
     return 0;
 }

@@ -17,8 +17,7 @@ typedef enum ModelType
     CHRMOD_LIMITED,                                // repressor works by chromatin modification (making it unaccessible), limited activation
     RATES,
     MARKOV,
-    TFC_DIRECT,
-    CLASSIFIER
+    TFC_DIRECT
 } ModelType;
 
 #include "ExprPar.h"

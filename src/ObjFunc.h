@@ -108,7 +108,35 @@ class Weighted_ClassifierObjFunc : public RMSEObjFunc, public Weighted_ObjFunc_M
   Weighted_ClassifierObjFunc() : RMSEObjFunc(), Weighted_ObjFunc_Mixin() {}
   //Weighted_ClassifierObjFunc() : ObjFunc(), Weighted_ObjFunc_Mixin() {}
   ~Weighted_ClassifierObjFunc(){ cerr << "In weighted destructor???" << endl; }
-  //double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+  void Fconverter(vector<vector<double> >& f_prediction);
+};
+
+class tTestKindaObjFunc : public ObjFunc
+{
+  ~tTestKindaObjFunc(){}
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+}; 
+
+class t_WSSE_ObjFunc: public RMSEObjFunc, public Weighted_ObjFunc_Mixin {
+public:
+    t_WSSE_ObjFunc() : RMSEObjFunc(), Weighted_ObjFunc_Mixin() {}
+    ~t_WSSE_ObjFunc(){};
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+};
+
+class t_WSSE_dot_ObjFunc: public RMSEObjFunc, public Weighted_ObjFunc_Mixin {
+public:
+    t_WSSE_dot_ObjFunc() : RMSEObjFunc(), Weighted_ObjFunc_Mixin() {}
+    ~t_WSSE_dot_ObjFunc(){};
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+};
+
+class SeqWise_ObjFunc: public RMSEObjFunc, public Weighted_ObjFunc_Mixin {
+public:
+    SeqWise_ObjFunc() : RMSEObjFunc(), Weighted_ObjFunc_Mixin() {}
+    ~SeqWise_ObjFunc(){};
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
 };
 
 #endif

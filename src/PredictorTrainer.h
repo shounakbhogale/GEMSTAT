@@ -14,14 +14,18 @@ using namespace std;
 
 enum ObjType
 {
-    SSE,                                          // sum of squared error
-    CORR,                                         // Pearson correlation
-    CROSS_CORR,                                   // cross correlation (maximum in a range of shifts)
-    PGP,                                           // PGP score
+    SSE,                                            // sum of squared error
+    CORR,                                           // Pearson correlation
+    CROSS_CORR,                                     // cross correlation (maximum in a range of shifts)
+    PGP,                                            // PGP score
     LOGISTIC_REGRESSION,                            // Logistic Regression
     PEAK_WEIGHTED,                                  // SSE with equal weight to peaks and non-peaks
-    WEIGHTED_SSE, 
-    WEIGHTED_CLASSIFIER                                 //User provides weights for sse.
+    WEIGHTED_SSE,                                   // User provides weights for sse.
+    WEIGHTED_CLASSIFIER,
+    T_TEST,
+    T_TEST_WSSE,
+    T_WSSE_DOT,
+    SEQWISE
 };
 
 ObjType getObjOption( const string& objOptionStr );
